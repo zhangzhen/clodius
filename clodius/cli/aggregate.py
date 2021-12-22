@@ -858,6 +858,18 @@ def _bedgraph(
         positions += [0]
         z += zoom_step
 
+    # allocate the space for the data on the max_zoom level, by zhangzhen
+    dsets += [
+        f.create_dataset(
+            "values_" + str(z), (dset_length,), dtype="f", compression="gzip"
+        )
+    ]
+    nan_dsets += [
+        f.create_dataset(
+            "nan_values_" + str(z), (dset_length,), dtype="f", compression="gzip"
+        )
+    ]
+
     # store some meta data
     d = f.create_dataset("meta", (1,), dtype="f")
 
@@ -1067,6 +1079,10 @@ def _bedgraph(
         # we've created enough tile levels to cover the entire maximum width
         if curr_zoom * zoom_step >= max_zoom:
             break
+
+    # copy the data from the last zoom_step level
+    dsets[curr_zoom][:] = dsets[curr_zoom-1][:]
+    nan_dsets[curr_zoom][:] = nan_dsets[curr_zoom-1][:]
 
     # still need to take care of the last chunk
 
